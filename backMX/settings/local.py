@@ -2,8 +2,12 @@ from backMX.settings.base import *
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'db',
+        'USER': 'django',
+        'PASSWORD': '0P7Tiw6KQCHJ',
+        'HOST': 'db',
+        'PORT': '3306',
     }
 }
 

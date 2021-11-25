@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  db:
+    image: mysql/mysql-server
+    restart: always
+    expose:
+      - '3306'
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'django'
+      MYSQL_PASSWORD: '0P7Tiw6KQCHJ'
+      MYSQL_ROOT_PASSWORD: '1lK2aQ4tozva'
+    volumes:
+      - my-db:/var/lib/mysql
+  app:
+    build:
+      context: .
+      dockerfile: ./compose/local/Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+volumes:
+  my-db:

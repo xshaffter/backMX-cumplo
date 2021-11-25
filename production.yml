@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./compose/production/Dockerfile
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+  db:
+    image: mysql/mysql-server
+    restart: always
+    expose:
+      - '3306'
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'django'
+      MYSQL_PASSWORD: '0P7Tiw6KQCHJ'
+      MYSQL_ROOT_PASSWORD: '1lK2aQ4tozva'
+    volumes:
+      - my-db:/var/lib/mysql
+  nginx:
+    build:
+      context: .
+      dockerfile: ./compose/nginx/Dockerfile
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    links:
+      - app:app
+    volumes:
+      - ./keys/:/certificates/
+    depends_on:
+      - app
+
+volumes:
+  my-db:
