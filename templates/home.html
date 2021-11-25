@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Home</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    </head>
+    <body>
+        <nav>
+            <div class="nav-wrapper">
+                <a href="#" class="brand-logo">Logo</a>
+                <ul id="nav-mobile" class="right hide-on-med-and-down">
+                    <li><a href="sass.html">Sass</a></li>
+                    <li><a href="badges.html">Components</a></li>
+                    <li><a href="collapsible.html">JavaScript</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="container m4">
+            <div class="row">
+                <div class="col s12 m6">
+                    <div class="card">
+                        <div class="card-image">
+                            <div id="usd-chart"></div>
+                        </div>
+                        <div class="card-content">
+                            <span class="card-title">USD</span>
+                            <p>
+                                Promedio: <span id="usd-avg"></span><br>
+                                Mínimo: <span id="usd-min"></span><br>
+                                Máximo: <span id="usd-max"></span><br>
+                            </p>
+                        </div>
+                        <div class="card-action">
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input type="text" id="usd-start_date" class="datepicker">
+                                    <label for="usd-start_date">fecha inicial</label>
+                                </div>
+                                <div class="input-field col s12">
+                                    <input type="text" id="usd-end_date" class="datepicker">
+                                    <label for="usd-end_date">fecha final</label>
+                                </div>
+                                <div class="input-field col s12">
+                                    <button class="btn btn-success" onclick="get_data('usd')">Buscar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6">
+                    <div class="card">
+                        <div class="card-image">
+                            <div id="udis-chart"></div>
+                        </div>
+                        <div class="card-content">
+                            <span class="card-title">UDIS</span>
+                            <p>
+                                Promedio: <span id="udis-avg"></span><br>
+                                Mínimo: <span id="udis-min"></span><br>
+                                Máximo: <span id="udis-max"></span><br>
+                            </p>
+                        </div>
+                        <div class="card-action">
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input type="text" id="udis-start_date" class="datepicker">
+                                    <label for="udis-start_date">fecha inicial</label>
+                                </div>
+                                <div class="input-field col s12">
+                                    <input type="text" id="udis-end_date" class="datepicker">
+                                    <label for="udis-end_date">fecha final</label>
+                                </div>
+                                <div class="input-field col s12">
+                                    <button class="btn btn-success" onclick="get_data('udis')">Buscar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m12">
+                    <div class="card">
+                        <div class="card-image">
+                            <div id="tiie-chart"></div>
+                        </div>
+                        <div class="card-content">
+                            <span class="card-title">TIIE's</span>
+                            <p>
+                                Máximo TIIE 4 semanas: <span id="tiie-4-max"></span><br>
+                                Máximo TIIE 13 semanas: <span id="tiie-13-max"></span><br>
+                                Máximo TIIE 26 semanas: <span id="tiie-26-max"></span><br>
+                            </p>
+                        </div>
+                        <div class="card-action">
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input type="text" id="tiie-start_date" class="datepicker">
+                                    <label for="tiie-start_date">fecha inicial</label>
+                                </div>
+                                <div class="input-field col s12">
+                                    <input type="text" id="tiie-end_date" class="datepicker">
+                                    <label for="tiie-end_date">fecha final</label>
+                                </div>
+                                <div class="input-field col s12">
+                                    <button class="btn btn-success" onclick="get_data('tiie')">Buscar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script>
+            google.charts.load('current', {'packages': ['corechart']});
+            google.charts.setOnLoadCallback(drawCharts);
+            let canvases = {
+                usd: document.getElementById('usd-chart'),
+                udis: document.getElementById('udis-chart'),
+                tiie: document.getElementById('tiie-chart'),
+            }
+            let charts = {
+                usd: null,
+                udis: null,
+            }
+
+            const csrftoken = '{{ csrf_token }}';
+
+            function get_data(name) {
+                try {
+                    let init_date = document.getElementById(`${name}-start_date`).value
+                    let end_date = document.getElementById(`${name}-end_date`).value
+                    fetch(`{% url "search-list" %}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            type: name,
+                            init_date: init_date,
+                            end_date: end_date
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (name === 'tiie') {
+                                load_tiie_data(name, data);
+                            } else {
+                                load_data(name, data);
+                            }
+                        })
+                } catch (ex) {
+                    console.log(ex)
+                }
+            }
+
+            function load_data(name, data) {
+                document.getElementById(`${name}-min`).innerHTML = data.min;
+                document.getElementById(`${name}-max`).innerHTML = data.max;
+                document.getElementById(`${name}-avg`).innerHTML = data.avg;
+                var dataTable = new google.visualization.DataTable();
+                dataTable.addColumn('string', 'Date');
+                dataTable.addColumn('number', 'MXN value');
+                dataTable.addRows(data.values);
+                var options = {
+                    title: data.get_type_display,
+                    legend: {position: 'bottom'}
+                };
+                var chart = new google.visualization.LineChart(canvases[name]);
+                chart.draw(dataTable, options);
+            }
+
+            function load_tiie_data(name, data) {
+                document.getElementById(`tiie-4-max`).innerHTML = data.searches[0].max;
+                document.getElementById(`tiie-13-max`).innerHTML = data.searches[1].max;
+                document.getElementById(`tiie-26-max`).innerHTML = data.searches[2].max;
+                var dataTable = new google.visualization.DataTable();
+                dataTable.addColumn('string', 'Date');
+                for (let search in data.lines) {
+                    dataTable.addColumn('number', data.lines[search]);
+                }
+                dataTable.addRows(data.values);
+
+                var options = {
+                    title: data.get_type_display,
+                    legend: {position: 'bottom'}
+                };
+                var chart = new google.visualization.LineChart(canvases[name]);
+                chart.draw(dataTable, options);
+            }
+
+            function drawCharts() {
+                for (let key in canvases) {
+                    load_data(key, {
+                        min: 0,
+                        max: 0,
+                        avg: 0,
+                        values: []
+                    })
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                let options = {
+                    format: 'yyyy-mm-dd'
+                }
+                var elems = document.querySelectorAll('.datepicker');
+                M.Datepicker.init(elems, options);
+            });
+        </script>
+    </body>
+</html>
