@@ -10,6 +10,7 @@ from cat.models import Search, ExchangeValue, TIIESearch
 class SearchViewSet(viewsets.ModelViewSet):
     queryset = Search.objects.all()
     serializer_class = SearchSerializer
+    permission_classes = []
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
