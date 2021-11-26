@@ -1,5 +1,6 @@
 # pull official base image
-FROM python:3.7
+FROM python:3.6
+ENV PYTHONUNBUFFERED 1
 
 RUN mkdir /app
 WORKDIR /app

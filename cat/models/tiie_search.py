@@ -1,53 +1,24 @@
 from collections import OrderedDict
 
+from django.utils.translation import gettext as _
 from django.db import models
 from django.apps import apps
 
-
-def merge(dct1, dct2):
-    result = OrderedDict()
-    before_size = False
-    last_2_value = None
-    for key, value in dct1.items():
-        if type(value) != list:
-            values = [value]
-        else:
-            values = value
-
-        if not before_size:
-            before_size = len(values)
-
-        if key in dct2:
-            values.append(dct2[key])
-            last_2_value = dct2[key]
-        else:
-            values.append(last_2_value)
-        result[key] = values
-
-    for key, value in dct2.items():
-        if type(value) != list:
-            values = [value]
-        else:
-            values = value
-
-        if key not in dct1:
-            values.append([None for _ in range(before_size)] + dct2[key])
-            result[key] = values
-    return result
-
-
-def unpack(dct):
-    return [[key] + value for key, value in dct.items()]
+from cat.functions import merge, unpack
 
 
 class TIIESearch(models.Model):
-    init_date = models.DateField()
-    end_date = models.DateField()
+    init_date = models.DateField(_("init date"))
+    end_date = models.DateField(_("final date"))
 
     def lines(self):
         return [search.get_type_display() for search in self.searches.all()]
 
     def values(self):
+        """
+        :return: a key ordered list based on dict data obtained from
+                results with the form [[key, value, value, value], [key, value, value, value]]
+        """
         values_1 = OrderedDict(sorted({key.strftime('%Y-%m-%d'): value for key, value in
                     list(self.searches.first().results.values_list('date', 'value'))}.items()))
         values_2 = OrderedDict(sorted({key.strftime('%Y-%m-%d'): value for key, value in
@@ -60,9 +31,7 @@ class TIIESearch(models.Model):
         values = unpack(values)
         return values
 
-    def perform(self):
-        for search in self.searches.all():
-            search.perform()
-
     class Meta:
         unique_together = ['init_date', 'end_date']
+        verbose_name_plural = _("TIIE Searches")
+        verbose_name = _("TIIE Search")

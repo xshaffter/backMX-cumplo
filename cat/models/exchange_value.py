@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext as _
 
 
 class ExchangeValue(models.Model):
@@ -13,9 +14,9 @@ class ExchangeValue(models.Model):
     TYPES = (
         (UDIS, 'UDIS'),
         (USD, 'USD'),
-        (TIIE_4_SEMANAS, 'TIIE 4 semanas'),
-        (TIIE_13_SEMANAS, 'TIIE 13 semanas'),
-        (TIIE_26_SEMANAS, 'TIIE 26 semanas'),
+        (TIIE_4_SEMANAS, _('TIIE 4 weeks')),
+        (TIIE_13_SEMANAS, _('TIIE 13 weeks')),
+        (TIIE_26_SEMANAS, _('TIIE 26 weeks')),
     )
 
     SERIE_AS_CODE = {
@@ -47,9 +48,9 @@ class ExchangeValue(models.Model):
         'tiie_26_semanas': TIIE_26_SEMANAS,
     }
 
-    type = models.SmallIntegerField(choices=TYPES, default=UDIS)
-    value = models.DecimalField(decimal_places=10, max_digits=15)
-    date = models.DateField()
+    type = models.SmallIntegerField(_("type"), choices=TYPES, default=UDIS)
+    value = models.DecimalField(_("value"), decimal_places=10, max_digits=15)
+    date = models.DateField(_("date"))
 
     @staticmethod
     def verify_exists(value_type, data):
@@ -58,9 +59,15 @@ class ExchangeValue(models.Model):
 
     @staticmethod
     def change_keys(data):
+        """
+        :param data: dict data with the values obtained from the api
+        :return: digested dict with transformed data
+        """
         values = []
         for serie in data:
+            # we change the string code to the DB code
             value_type = ExchangeValue.SERIE_AS_CODE[serie['idSerie']]
+            # only add data if it isn't in the DB
             datos = [{
                 'type': value_type,
                 'date': dato['fecha'],
@@ -75,3 +82,5 @@ class ExchangeValue(models.Model):
 
     class Meta:
         unique_together = ['type', 'date']
+        verbose_name = _('Exchange value')
+        verbose_name_plural = _('Exchange values')

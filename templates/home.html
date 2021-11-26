@@ -5,20 +5,15 @@
         <meta charset="UTF-8">
         <title>Home</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <style>
+            .scroll {
+                overflow: scroll;
+                max-height: 200px;
+            }
+        </style>
     </head>
     <body>
-        <nav>
-            <div class="nav-wrapper">
-                <a href="#" class="brand-logo">Logo</a>
-                <ul id="nav-mobile" class="right hide-on-med-and-down">
-                    <li><a href="sass.html">Sass</a></li>
-                    <li><a href="badges.html">Components</a></li>
-                    <li><a href="collapsible.html">JavaScript</a></li>
-                </ul>
-            </div>
-        </nav>
-
-        <div class="container m4">
+        <div class="container">
             <div class="row">
                 <div class="col s12 m6">
                     <div class="card">
@@ -27,11 +22,26 @@
                         </div>
                         <div class="card-content">
                             <span class="card-title">USD</span>
-                            <p>
-                                Promedio: <span id="usd-avg"></span><br>
-                                Mínimo: <span id="usd-min"></span><br>
-                                Máximo: <span id="usd-max"></span><br>
-                            </p>
+                            <div class="row">
+                                <div class="col">
+                                    Promedio: <span id="usd-avg"></span><br/>
+                                    Mínimo: <span id="usd-min"></span><br/>
+                                    Máximo: <span id="usd-max"></span><br/>
+                                </div>
+                                <div class="col scroll">
+                                    <table id="usd-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>MXN</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="usd-table-body">
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-action">
                             <div class="row">
@@ -57,11 +67,26 @@
                         </div>
                         <div class="card-content">
                             <span class="card-title">UDIS</span>
-                            <p>
-                                Promedio: <span id="udis-avg"></span><br>
-                                Mínimo: <span id="udis-min"></span><br>
-                                Máximo: <span id="udis-max"></span><br>
-                            </p>
+                            <div class="row">
+                                <div class="col">
+                                    Promedio: <span id="udis-avg"></span><br>
+                                    Mínimo: <span id="udis-min"></span><br>
+                                    Máximo: <span id="udis-max"></span><br>
+                                </div>
+                                <div class="col scroll">
+                                    <table id="udis-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>MXN</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="udis-table-body">
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-action">
                             <div class="row">
@@ -87,11 +112,28 @@
                         </div>
                         <div class="card-content">
                             <span class="card-title">TIIE's</span>
-                            <p>
-                                Máximo TIIE 4 semanas: <span id="tiie-4-max"></span><br>
-                                Máximo TIIE 13 semanas: <span id="tiie-13-max"></span><br>
-                                Máximo TIIE 26 semanas: <span id="tiie-26-max"></span><br>
-                            </p>
+                            <div class="row">
+                                <div class="col">
+                                    Máximo TIIE 4 semanas: <span id="tiie-4-max"></span><br>
+                                    Máximo TIIE 13 semanas: <span id="tiie-13-max"></span><br>
+                                    Máximo TIIE 26 semanas: <span id="tiie-26-max"></span><br>
+                                </div>
+                                <div class="col scroll">
+                                    <table id="tiie-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>4 semanas</th>
+                                                <th>13 semanas</th>
+                                                <th>26 semanas</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tiie-table-body">
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-action">
                             <div class="row">
@@ -121,11 +163,14 @@
             let canvases = {
                 usd: document.getElementById('usd-chart'),
                 udis: document.getElementById('udis-chart'),
-                tiie: document.getElementById('tiie-chart'),
             }
             let charts = {
                 usd: null,
                 udis: null,
+            }
+            let urls = {
+                tiie: '{% url "tiie-search" %}',
+                usual: '{% url "search" %}'
             }
 
             const csrftoken = '{{ csrf_token }}';
@@ -134,18 +179,20 @@
                 try {
                     let init_date = document.getElementById(`${name}-start_date`).value
                     let end_date = document.getElementById(`${name}-end_date`).value
-                    fetch(`{% url "search-list" %}`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrftoken,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            type: name,
-                            init_date: init_date,
-                            end_date: end_date
-                        })
-                    })
+                    let url = urls.usual;
+                    if (name === 'tiie') {
+                        url = urls.tiie;
+                    }
+                    var params = {
+                        type: name,
+                        init_date: init_date,
+                        end_date: end_date
+                    }
+                    var str_params = Object.keys(params).map(function (key) {
+                        return key + '=' + params[key];
+                    }).join('&');
+                    let url_item = `${url}?${str_params}`
+                    fetch(url_item)
                         .then(response => response.json())
                         .then(data => {
                             if (name === 'tiie') {
@@ -167,6 +214,16 @@
                 dataTable.addColumn('string', 'Date');
                 dataTable.addColumn('number', 'MXN value');
                 dataTable.addRows(data.values);
+                let table_body = document.getElementById(`${name}-table-body`);
+                data.values.forEach((value, index) => {
+                    let row = document.createElement('tr');
+                    value.forEach((column, index2) => {
+                        let col = document.createElement('td');
+                        col.innerHTML = column;
+                        row.appendChild(col);
+                    });
+                    table_body.appendChild(row);
+                });
                 var options = {
                     title: data.get_type_display,
                     legend: {position: 'bottom'}
@@ -186,11 +243,21 @@
                 }
                 dataTable.addRows(data.values);
 
+                let table_body = document.getElementById(`tiie-table-body`)
+                data.values.forEach((value, index) => {
+                    let row = document.createElement('tr')
+                    value.forEach((column, index2) => {
+                        let col = document.createElement('td')
+                        col.innerHTML = column;
+                        row.appendChild(col);
+                    })
+                    table_body.appendChild(row)
+                })
                 var options = {
                     title: data.get_type_display,
                     legend: {position: 'bottom'}
                 };
-                var chart = new google.visualization.LineChart(canvases[name]);
+                var chart = new google.visualization.LineChart(document.getElementById('tiie-chart'));
                 chart.draw(dataTable, options);
             }
 
@@ -203,7 +270,20 @@
                         values: []
                     })
                 }
+                load_tiie_data('tiie', {
+                    min: 0,
+                    max: 0,
+                    avg: 0,
+                    values: [],
+                    lines: [
+                        'TIIE 4 semanas',
+                        'TIIE 13 semanas',
+                        'TIIE 26 semanas',
+                    ],
+                    searches: [{}, {}, {}]
+                })
             }
+
 
             document.addEventListener('DOMContentLoaded', function () {
                 let options = {
